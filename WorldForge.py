@@ -471,14 +471,20 @@ class LevelEditor:
         self.show_tiles = False
         self.fill = False
         self.tile_slot_size = tilesize
-
-        # List to keep track of tile placements for undo
-        self.tile_check = []
-        self.tilemap_history = []
-        self.fill_tilemap_history = []
-        self.tile_was_empty = True
+        self.dragging_tile = False
+        self.dragging_start_pos = None
         self.middle_mouse_dragging = False
         self.middle_mouse_drag_start = None
+
+        # List to keep track of tile placements for undo
+        self.last_state = None
+        self.old_tile = []
+        self.old_tile_ids = []
+        self.default_redo = []
+        self.tile_check = []
+        self.redo_history = []
+        self.undo_history = [self.tilemap.tilemap.copy()]
+        self.fill_undo_history = []
 
         # variables to track current level size
         self.current_level_x = 0
@@ -519,6 +525,14 @@ class LevelEditor:
         self.zoom_step = 1
         self.zoom_max = 8.0
         self.zoom_min = 0.5
+
+        # cooldowns
+        self.undoing = False
+        self.redoing = False
+        self.cooldowns = {
+            'undo': 0,
+            'redo': 0
+        }
 
     def get_editor_settings(self):
         with open('./settings.json', 'r') as configfile:
@@ -575,17 +589,32 @@ class LevelEditor:
     def export_as_png(self):
         self.tilemap.export_as_png(self.map_path.removesuffix(f"/{self.map_name}.forge"))
 
-    def undo(self, tile_to_remove, fill:bool=False):
-        if tile_to_remove in list(self.tilemap.tilemap.keys()) and not fill:
+    def undo(self):
+        if len(self.undo_history) > 0:
             print('undoing...')
-            if len(self.tilemap_history) > 0:
-                self.tilemap.tilemap = self.tilemap_history.pop()
-        elif tile_to_remove in list(self.tilemap.tilemap.keys()) and fill:
-            if len(self.fill_tilemap_history) > 0:
-                self.tilemap.tilemap = self.fill_tilemap_history.pop()
-        else:
-            print('at earliest point!')
-            pass
+            self.last_state = self.tilemap.tilemap.copy()
+            # # Save the current tilemap state for redo
+            self.redo_history.append(self.tilemap.tilemap.copy())
+            # # Restore the previous state
+            old_state = self.undo_history.pop()
+            self.tilemap.tilemap = old_state
+
+            if len(self.old_tile_ids) > 0 and len(self.old_tile) > 0:
+                for tile_id in self.old_tile_ids:
+                    self.old_tile_ids.pop()
+                    old_tile = self.old_tile.pop()
+                    if self.tilemap.tilemap[f"{old_tile['position'][0]};{old_tile['position'][1]}"]['id'] != tile_id:
+                        self.tilemap.tilemap[f"{old_tile['position'][0]};{old_tile['position'][1]}"]['id'] = tile_id
+            else:
+                pass
+
+    def redo(self):
+        if len(self.redo_history) > 0:
+            print('redoing...')
+            # Save the current tilemap state for undo
+            self.copy_undo_state()
+            # Restore the next state (if available) for redo
+            self.tilemap.tilemap = self.redo_history.pop()
 
     def fill_empty_space(self, start_pos):
         # Check if the selected tile is already filled or out of bounds
@@ -639,6 +668,7 @@ class LevelEditor:
             if self.tilemap.tilemap.get(str(self.selected_tile_pos), None) is None:
                 # Fill empty space around the clicked position
                 self.fill_empty_space(self.selected_tile_pos)
+        self.clicking = False
 
     def updates(self):
         self.mouse_position = pygame.mouse.get_pos()
@@ -830,10 +860,13 @@ class LevelEditor:
                                     pygame.quit()
                                     sys.exit()
 
-    def render(self, surface:PYSURFACE):
+    def copy_undo_state(self):
+        self.undo_history.append(self.tilemap.tilemap.copy())
+
+    def render(self, surface: PYSURFACE):
         # fill background of editor area
-        surface.fill([80,80,80])
-        
+        surface.fill([80, 80, 80])
+
         # update scroll/"camera" value to move the level
         self.scroll[0] += (self.movement[1] - self.movement[0]) * 2
         self.scroll[1] += (self.movement[3] - self.movement[2]) * 2
@@ -857,61 +890,59 @@ class LevelEditor:
             )
 
             # Highlight the selected grid square with an outline.
-            pygame.draw.rect(surface, (250,50,50), selected_grid_rect, 1)
+            pygame.draw.rect(surface, (250, 50, 50), selected_grid_rect, 1)
 
         # draw tiles to tilemap
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if self.clicking and self.ongrid and self.show_tiles and not mouse_x < self.tile_view_width:
+            tile_location = str(self.selected_tile_pos[0]) + ";" + str(self.selected_tile_pos[1])
+            if tile_location not in self.tilemap.tilemap:
+                placed_tile = {
+                    'tileset': self.tile_list[self.tile_group],
+                    "id": self.tile_id,
+                    "position": (
+                        self.mouse_position[0] + self.scroll[0],
+                        self.mouse_position[1] + self.scroll[1],
+                    ),
+                }
+                self.tile_check.append(placed_tile['position'])
+                self.copy_undo_state()
+                self.tilemap.tilemap[tile_location] = {'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': self.selected_tile_pos}
+            
+            elif tile_location in self.tilemap.tilemap and self.tilemap.tilemap[tile_location]['id'] != self.tile_id:
+                self.copy_undo_state()
+                self.tilemap.tilemap[tile_location] = {'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': self.selected_tile_pos}
 
-            # Check if a tile was drawn over or empty
-            placed_tile = {
-                'tileset': self.tile_list[self.tile_group],
-                "id": self.tile_id,
-                "position": (
-                    self.mouse_position[0] + self.scroll[0],
-                    self.mouse_position[1] + self.scroll[1],
-                ),
-            }
-            self.tile_check.append(placed_tile['position'])
-            self.tilemap_history.append(self.tilemap.tilemap.copy())
-            self.tilemap.tilemap[str(self.selected_tile_pos[0]) + ";" + str(self.selected_tile_pos[1])] = {'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': self.selected_tile_pos}
-                
         elif self.clicking and self.ongrid and not self.show_tiles:
-
-             # Check if a tile was drawn over or empty
-            placed_tile = {
-                'tileset': self.tile_list[self.tile_group],
-                "id": self.tile_id,
-                "position": (
-                    self.mouse_position[0] + self.scroll[0],
-                    self.mouse_position[1] + self.scroll[1],
-                ),
-            }
-            self.tile_check.append(placed_tile['position'])
-            self.tilemap_history.append(self.tilemap.tilemap.copy())
-            self.tilemap.tilemap[str(self.selected_tile_pos[0]) + ";" + str(self.selected_tile_pos[1])] = {'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': self.selected_tile_pos}
-
-        # draw off-grid tiles
-        for offgrid_tile in self.tilemap.offgrid_tiles:
-            tile_type = offgrid_tile['tileset']
-            tile_id_index = offgrid_tile["id"]
-            # position = offgrid_tile["position"]
-            position = (offgrid_tile["position"][0] / self.zoom, offgrid_tile["position"][1] / self.zoom)
-            tile_image = self.assets[tile_type][tile_id_index]
-            tile_rect = pygame.Rect(
-                (position[0] - self.scroll[0], position[1] - self.scroll[1]),
-                (tile_image.get_width(), tile_image.get_height()),
-            )
-
+            tile_location = str(self.selected_tile_pos[0]) + ";" + str(self.selected_tile_pos[1])
+            if tile_location not in self.tilemap.tilemap:
+                placed_tile = {
+                    'tileset': self.tile_list[self.tile_group],
+                    "id": self.tile_id,
+                    "position": (
+                        self.mouse_position[0] + self.scroll[0],
+                        self.mouse_position[1] + self.scroll[1],
+                    ),
+                }
+                self.tile_check.append(placed_tile['position'])
+                self.copy_undo_state()
+                self.tilemap.tilemap[tile_location] = {'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': self.selected_tile_pos}
+            
+            elif tile_location in self.tilemap.tilemap and self.tilemap.tilemap[tile_location]['id'] != self.tile_id:
+                self.copy_undo_state()
+                self.tilemap.tilemap[tile_location] = {'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': self.selected_tile_pos}
+            
         # delete tiles from tilemap
         if self.right_clicking:
             tile_location = str(self.selected_tile_pos[0]) + ";" + str(self.selected_tile_pos[1])
             if tile_location in self.tilemap.tilemap:
+                self.copy_undo_state()
                 del self.tilemap.tilemap[tile_location]
             for tile in self.tilemap.offgrid_tiles.copy():
                 tile_image = self.assets[tile['tileset']][tile['id']]
                 tile_rect = pygame.Rect( (tile['position'][0] - self.scroll[0], tile['position'][1] - self.scroll[1]), (tile_image.get_width(), tile_image.get_height()) )
                 if tile_rect.collidepoint(self.mouse_position):
+                    self.copy_undo_state()
                     self.tilemap.offgrid_tiles.remove(tile)
 
         # render the current selected tile hud
@@ -943,7 +974,7 @@ class LevelEditor:
 
     def send_frame(self):
         pygame.display.update()
-        self.clock.tick(144)
+        self.dt = self.clock.tick(144) / 1000.0
 
     def save(self, path):
         try:
@@ -998,14 +1029,20 @@ class LevelEditor:
 
                         if not self.ongrid:
                             self.tilemap.offgrid_tiles.append({'tileset': self.tile_list[self.tile_group], 'id': self.tile_id, 'position': (self.mouse_position[0] + self.scroll[0], self.mouse_position[1] + self.scroll[1])})
+                            self.clicking = False
 
                         if self.fill:
-                            self.fill_tilemap_history.append(
+                            self.fill_undo_history.append(
                                 self.tilemap.tilemap.copy()
                             )
                             self.fill_bucket()
 
-                        print(self.selected_tile_pos, 'tile just placed')
+                        # print(self.selected_tile_pos, 'tile just placed')
+
+                    # Handle tile dragging
+                    if event.button == editor_controls['place tile'] and self.ongrid:
+                        self.dragging_tile = True
+                        self.dragging_start_pos = self.selected_tile_pos
 
                     elif event.button == 2:  # Middle mouse button
                         self.middle_mouse_dragging = True
@@ -1017,6 +1054,10 @@ class LevelEditor:
                 if event.type == MOUSEBUTTONUP:
                     if event.button == editor_controls['place tile']:
                         self.clicking = False
+                    # Handle tile dragging
+                    elif event.button == editor_controls['place tile'] and self.ongrid:
+                        self.dragging_tile = False
+                        self.dragging_start_pos = None
                     elif event.button == editor_controls['del tile']:
                         self.right_clicking = False
                     
@@ -1027,13 +1068,6 @@ class LevelEditor:
                 if event.type == KEYDOWN:
                     if event.key == editor_controls['menu']:
                         self.dropdown_open = not self.dropdown_open
-                    
-                    # Check for left control + Z key combination for undo
-                    # elif event.key == pygame.K_z and pygame.key.get_mods() & pygame.KMOD_CTRL and len(self.tile_placement_history) > 0:
-                    #     # Check for Ctrl+Z (undo)
-                    #     last_tile_placed = self.tile_placement_history.pop()['position']
-                    #     self.undo(f"{int(last_tile_placed[0] // self.tilesize)};{int(last_tile_placed[1] // self.tilesize)}")
-                    
                     elif event.key == editor_controls['fill']:
                         self.fill = not self.fill
                     elif event.key == editor_controls['show tiles']:
@@ -1079,24 +1113,41 @@ class LevelEditor:
 
             keys = pygame.key.get_pressed()
 
-            # Regular undo
-            if keys[pygame.K_z] and pygame.key.get_mods() & pygame.KMOD_CTRL and len(self.tilemap_history) > 0 and not self.fill:
-                # Check if tile exists before undo
-                tile_check = self.tile_check.pop()
-                print(f"{int(tile_check[0] // self.tilesize)};{int(tile_check[1] // self.tilesize)}", "pos to check")
-                # perform undo
-                self.undo(f"{int(tile_check[0] // self.tilesize)};{int(tile_check[1] // self.tilesize)}")
+            # undo 
+            if keys[pygame.K_z] and pygame.key.get_mods() & pygame.KMOD_CTRL and not self.cooldowns['undo']:
+                print('undo')
+                self.cooldowns['undo'] = UNDO_CD
+                self.undo()
+                self.undoing = not self.undoing
             
-            # Fill undo
-            if keys[pygame.K_z] and pygame.key.get_mods() & pygame.KMOD_CTRL and self.fill and len(self.fill_tilemap_history) > 0 :
-                print('fill undo')
-                # Check if tile exists before undo
-                tile_check = self.tile_check.pop()
-                # perform undo
-                self.undo(f"{int(tile_check[0] // self.tilesize)};{int(tile_check[1] // self.tilesize)}",self.fill)
+            # redo
+            if keys[pygame.K_y] and pygame.key.get_mods() & pygame.KMOD_CTRL and not self.cooldowns['redo']:
+                print('redo')
+                self.cooldowns['redo'] = UNDO_CD
+                self.redo()
+                self.redoing = not self.redoing
 
-            print(self.tile_id)
-            # print(self.tile_placement_history)
+            # cooldowns
+            if self.undoing:
+                self.cooldowns['undo'] -= self.dt
+            if self.redoing:
+                self.cooldowns['redo'] -= self.dt
+
+            if self.cooldowns['undo'] <= 0:
+                self.cooldowns['undo'] = 0
+                self.undoing = False
+            if self.cooldowns['redo'] <= 0:
+                self.cooldowns['redo'] = 0
+                self.redoing = False
+
+            # reset variables
+            if self.clicking and self.tilemap.tilemap != self.last_state and len(self.redo_history) > 0:
+                self.redo_history = []
+
+            # debug
+            # print("undo's", len(self.undo_history), "|", "redo's", len(self.redo_history), "|", "old tiles", len(self.old_tile), "|", "old tile id's", len(self.old_tile_ids))
+            # print(self.cooldowns)
+
             self.send_frame()
 
 
