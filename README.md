@@ -11,7 +11,7 @@
 
 ## How Does It Work?
 
-Creating captivating worlds is a breeze with **WorldForge**. Choose from various tilesets or import your own. Effortlessly place and manipulate tiles with an intuitive grid system. Zoom and pan for pixel-perfect precision.
+Creating captivating worlds is a breeze with **WorldForge**. Effortlessly place and manipulate tiles with an intuitive grid system. Zoom and pan for pixel-perfect precision.
 
 ## Map Data Exports
 
