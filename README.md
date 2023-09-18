@@ -1,7 +1,6 @@
 <p align="center">
   <img src="https://github.com/setoyuma/WorldForge/assets/118138305/50908819-fe2a-440b-a8ec-451bbe030329" alt="WorldForge Logo">
 </p>
-
 # WorldForge
 
 **WorldForge** - Unleash Your Creativity!
@@ -35,10 +34,10 @@ Export your creations seamlessly. Preserve your vision in JSON format, whether i
 
 Software from Cursework
 
-<p align="center">
-  <img src="https://github.com/setoyuma/WorldForge/assets/118138305/2d1aa21a-ac45-4e5b-af03-00d6fe7cffe5" alt="Screenshot">
+<p>
+  <img src="https://github.com/setoyuma/WorldForge/assets/118138305/f976249a-032e-46b8-8147-a548c722a960" alt="Screenshot">
 </p>
 
-<p align="center">
-  <img src="https://github.com/setoyuma/WorldForge/assets/118138305/3b7c199f-cea0-4000-8733-3552f289f18d" alt="Screenshot">
+<p>
+  <img src="https://github.com/setoyuma/WorldForge/assets/118138305/228a9a16-0a26-482b-be7b-a10a6df61d68" alt="Screenshot">
 </p>
