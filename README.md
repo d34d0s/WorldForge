@@ -20,14 +20,19 @@ WORLDFORGE is your canvas, perfect for game developers, artists, and world build
 WORLDFORGE - Where Creativity Knows No Bounds!
 
 -- Keybinds --
-    * V = toggle grid view
-    * T = toggle tileset viewport
-    * G = toggle snap to grid
-    * ESC = toggle menu
-    * F1 = Save shortcut
-    * CTRL + Z = undo
+* V = toggle grid view
+    
+* T = toggle tileset viewport
+    
+* G = toggle snap to grid
+    
+* ESC = toggle menu
+    
+* F1 = Save shortcut
+    
+* CTRL + Z = undo
 
-- Software from Cursework -
+- Software from Cursework
 
 
 ![image](https://github.com/setoyuma/WorldForge/assets/118138305/2d1aa21a-ac45-4e5b-af03-00d6fe7cffe5)
