@@ -31,6 +31,8 @@ Export your creations seamlessly. Preserve your vision in JSON format, whether i
 - **ESC**: Toggle menu
 - **F1**: Save shortcut
 - **CTRL + Z**: Undo
+- **CTRL + Y**: redo
+- **(Hold) Left Shift + Left Click**: copy tile
 
 Software from Cursework
 
