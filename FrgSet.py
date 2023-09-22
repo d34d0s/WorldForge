@@ -1,10 +1,17 @@
 from CURSEWORK import *
 
-RENDER_SCALE = 1.0
 HOME_SCREEN_WIDTH = 1600
 HOME_SCREEN_HEIGHT = 1000
 WHITE = (255, 255, 255)
 BLACK = (0,0,0)
+DEFAULT_FONT_SIZE = 24
+FONT = './slkscr.ttf'
+# Chosen_Theme = 'Supporter'
+Chosen_Theme = 'Beta-Forge'
+
+# tool cooldowns
+# time based on seconds
+UNDO_CD = 0.07
 
 EDITOR_SCREEN_WIDTH = 1600
 EDITOR_SCREEN_HEIGHT = 1000
@@ -39,9 +46,23 @@ editor_controls = {
 THEMES = {
     "Beta-Forge": {
         "main": [0,0,0],
-        "secondary": [80,80,80],
         "accent": [255,255,255],
+        "secondary": [80,80,80],
+        "hover": [122, 80, 220],
         "text": [255,255,255],
-        "grid": [125,125,125]
-    }
+        "grid": [125,125,125],
+        "arrow color": [255,255,255],
+        "supporter color": [255,180,0],
+    },
+    "Supporter": {
+        "main": [40,40,60],
+        "accent": [255,25,25],
+        "secondary": [22, 80, 60],
+        "hover": [0,0,0],
+        "text": [255,255,255],
+        "grid": [225,255,40],
+        "arrow color": [255,255,255],
+        "supporter color": [255,180,0],
+    },
 }
+[226,255,48]
