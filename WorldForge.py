@@ -1,9 +1,4 @@
 from FrgSet import *
-
-
-import pygame
-import sys
-
 # Define constants for screen dimensions, colors, and other configurations as needed
 SUPPORTER_SCALE = 1.2
 SUPPORTER_START_X = 115
