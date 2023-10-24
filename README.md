@@ -34,7 +34,6 @@ Export your creations seamlessly. Preserve your vision in JSON format, whether i
 - **CTRL + Y**: redo
 - **(Hold) Left Shift + Left Click**: copy tile
 
-Software from Cursework
 
 <p>
   <img src="https://github.com/setoyuma/WorldForge/assets/118138305/f976249a-032e-46b8-8147-a548c722a960" alt="Screenshot">
