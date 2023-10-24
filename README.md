@@ -1,7 +1,6 @@
 <p align="center">
   <img src="https://github.com/setoyuma/WorldForge/assets/118138305/50908819-fe2a-440b-a8ec-451bbe030329" alt="WorldForge Logo">
 </p>
-# WorldForge
 
 **WorldForge** - Unleash Your Creativity!
 
