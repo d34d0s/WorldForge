@@ -1,3 +1,7 @@
-CURSEWORK.py
-*.pyc
-*.pyc
+*.bat
+venv/
+build/
+assets/
+WF2-Builds/
+*__pycache__/
+PyForge2022.py
