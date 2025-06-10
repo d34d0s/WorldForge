@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/images/wf3/banner_5x.png?raw=true" alt="WorldForge Logo"/>  
+<img src="external/data/assets/images/wf3/banner_5x.png?raw=true" alt="WorldForge Logo"/>  
 
 <br><br>
 
