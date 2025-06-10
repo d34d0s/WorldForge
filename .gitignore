@@ -1,7 +1,4 @@
-*.bat
-venv/
-build/
-assets/
-WF2-Builds/
-*__pycache__/
-PyForge2022.py
+map/
+data/
+blakbox/
+__pycache__/
