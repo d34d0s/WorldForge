@@ -188,3 +188,4 @@ class Footer(box.resource.BOXlabel):
         self.set_element("tilesize", FooterTileSize(scene))
         self.set_element("mapsize", FooterMapSize(scene))
 
+ 
