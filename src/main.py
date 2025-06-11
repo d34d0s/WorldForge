@@ -21,6 +21,10 @@ class Worldforge(box.app.BOXapp):
                 # load settings
                 self.settings = json.load(settings)
             
+                # load binds
+                self.mouse_binds: dict[str, int] = {k: getattr(box.app.BOXmouse, v, None) for k, v in self.settings["app"]["binds"]["mouse"].items()}
+                self.key_binds: dict[str, int] = {k: getattr(box.app.BOXkeyboard, v, None) for k, v in self.settings["app"]["binds"]["keyboard"].items()}
+
                 # load theme
                 with open(box.utils.rel_path(f"external/data/themes/{self.settings['app']['theme']}.json"), "r") as theme:
                     self.theme = json.load(theme)

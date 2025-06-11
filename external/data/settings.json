@@ -4,6 +4,18 @@
     "app": {
         "ws": [1280, 720],
         "ds": [1280, 720],
-        "theme": "theforge"
+        "theme": "theforge",
+        "binds": {
+            "mouse": {
+                "set-tile": "LeftClick",
+                "rem-tile": "RightClick"
+            },
+            "keyboard": {
+                "clear-map": "F5",
+                "import-map": "F1",
+                "export-map": "F2",
+                "export-map-image": "F3"
+            }
+        }
     }
 }

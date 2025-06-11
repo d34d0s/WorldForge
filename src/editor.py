@@ -8,7 +8,7 @@ class Editor(box.scene.BOXscene):
     def __init__(self, wf) -> None:
         super().__init__(app=wf)
 
-    def init(self):
+    def init(self) -> None:
         # SAVE STATE
         self.export_grid: bool = False
 
@@ -34,32 +34,41 @@ class Editor(box.scene.BOXscene):
         self.renderer.set_flag(self.renderer.flags.DEBUG_TILEMAP)
         self.render_range_clamp: callable = lambda v: box.utils.clamp(v, int(self.tilemap.grid_size[0] / 2), self.tilemap.grid_size[0])
 
-    def exit(self): pass
+    def exit(self) -> None: pass
 
-    def events(self):
+    def events(self) -> None:
+        # map zoom
         if not isinstance(box.app.BOXmouse.Hovering, box.resource.BOXelement):
             self.camera.mod_viewport(-2 * self.app.events.mouse_wheel_up)
             self.camera.mod_viewport(2 * self.app.events.mouse_wheel_down)
 
-        if self.app.events.key_pressed(box.app.BOXkeyboard.F1):
-            self.tilemap.export_data(self.map_name, self.map_path)
-        
-        if self.app.events.key_pressed(box.app.BOXkeyboard.F2):
+        # map import
+        if self.app.events.key_pressed(self.app.key_binds["import-map"]):
             if self.tilemap.import_data(self.map_name, self.map_path):
                 self.tilemap.grid_color = self.theme["grid-color"]
                 self.map_loaded = True
-            
-        if self.app.events.key_pressed(box.app.BOXkeyboard.F3):
+
+        # map export
+        if self.app.events.key_pressed(self.app.key_binds["export-map"]):
+            self.tilemap.export_data(self.map_name, self.map_path)
+
+        # map image export
+        if self.app.events.key_pressed(self.app.key_binds["export-map-image"]):
             self.tilemap.export_surface(self.map_name, self.map_path, self.export_grid)
-        
-        if self.app.events.key_pressed(box.app.BOXkeyboard.F5):
+
+        # map clear/reset
+        if self.app.events.key_pressed(self.app.key_binds["clear-map"]):
             self.map_loaded = False
             self.tilemap.clear()
 
-        if not isinstance(box.app.BOXmouse.Hovering, box.resource.BOXelement) and self.app.events.mouse_held(box.app.BOXmouse.LeftClick):
+        # set tile
+        if not isinstance(box.app.BOXmouse.Hovering, box.resource.BOXelement)\
+           and self.app.events.mouse_held(self.app.mouse_binds["set-tile"]):
             self.tilemap.set_tile(self.tile_layer, box.app.BOXmouse.pos.view, self.tile_id, self.tileset_id)
 
-        if not isinstance(box.app.BOXmouse.Hovering, box.resource.BOXelement) and self.app.events.mouse_held(box.app.BOXmouse.RightClick):
+        # rem tile
+        if not isinstance(box.app.BOXmouse.Hovering, box.resource.BOXelement)\
+           and self.app.events.mouse_held(self.app.mouse_binds["rem-tile"]):
             self.tilemap.rem_tile(self.tile_layer, box.app.BOXmouse.pos.view)
 
     def update(self, dt: float) -> None:
@@ -73,14 +82,5 @@ class Editor(box.scene.BOXscene):
         self.cache.update_animation("load-anim", dt)
 
     def render(self) -> None:
-        box.BOXlogger.DEBUG_MODE = 0
-        self.render_range = [
-            int(self.tilemap.grid_size[0] / self.camera.viewport_scale[0]),
-            int(self.tilemap.grid_size[1] / self.camera.viewport_scale[1])
-        ]
-        self.render_range = [*map(self.render_range_clamp, self.render_range)]
-
-        # for tile in self.tilemap.all_tiles(self.tile_layer):
-        for tile in self.tilemap.get_tile_region(self.tile_layer, self.render_range, self.camera.pos):
+        for tile in self.tilemap.all_tiles(self.tile_layer):
             self.renderer.commit_surface(tile.surface, tile.pos)
-        box.BOXlogger.DEBUG_MODE = 1
